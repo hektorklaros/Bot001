@@ -1,1 +1,9 @@
-
+{
+  "crons": [
+    { "path": "/api/bot", "schedule": "* * * * *" }
+  ],
+  "functions": {
+    "api/bot.js": { "maxDuration": 60 },
+    "api/panel.js": { "maxDuration": 60 }
+  }
+}
