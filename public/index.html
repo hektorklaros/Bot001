@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>KRONOS-CB · futuros BTC en Coinbase</title>
+<style>
+  :root{
+    --fondo:#0e1116; --panel:#161b23; --linea:#252c37; --texto:#e6ebf2;
+    --tenue:#8e9aab; --largo:#f0a500; --corto:#4a9cf5; --malo:#e5484d; --bueno:#3dd68c;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--fondo);color:var(--texto);
+    font:15px/1.45 ui-sans-serif,-apple-system,"SF Pro Text",system-ui,sans-serif;
+    padding:14px 14px 60px;-webkit-text-size-adjust:100%}
+  h1{font-size:15px;letter-spacing:.14em;text-transform:uppercase;margin:0 0 2px;font-weight:600}
+  .sub{color:var(--tenue);font-size:12px;margin-bottom:14px}
+  .caja{background:var(--panel);border:1px solid var(--linea);border-radius:12px;padding:14px;margin-bottom:12px}
+  .rotulo{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--tenue);margin-bottom:8px}
+  .cifra{font-variant-numeric:tabular-nums;font-weight:700;font-size:40px;line-height:1;letter-spacing:-.02em}
+  .mini{font-variant-numeric:tabular-nums;font-size:13px;color:var(--tenue)}
+  .fila{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px solid var(--linea)}
+  .fila:last-child{border-bottom:0}
+  .fila b{font-weight:600;font-variant-numeric:tabular-nums}
+  button{font:inherit;font-weight:600;color:var(--texto);background:#1f2733;border:1px solid var(--linea);
+    border-radius:9px;padding:11px 13px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  button:active{transform:translateY(1px)}
+  button.ancho{width:100%;margin-top:8px}
+  button.peligro{border-color:#5a2326;color:#ff9ea1}
+  button.bien{border-color:#245c43;color:var(--bueno)}
+  input,select{font:inherit;color:var(--texto);background:#0d1117;border:1px solid var(--linea);
+    border-radius:8px;padding:9px 10px;width:100%}
+  label{display:block;font-size:12px;color:var(--tenue);margin:9px 0 3px}
+  .rejilla{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .aviso{background:#2a1416;border:1px solid #5a2326;color:#ffb4b6;border-radius:10px;padding:11px;margin-bottom:12px;font-size:13.5px}
+  .nota{background:#12212c;border:1px solid #24435a;color:#a9cbe4;border-radius:10px;padding:11px;margin-bottom:12px;font-size:13px}
+  .largo{color:var(--largo)} .corto{color:var(--corto)}
+  .bueno{color:var(--bueno)} .malo{color:var(--malo)}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums}
+  th{text-align:left;color:var(--tenue);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.08em;padding:6px 6px 6px 0}
+  td{padding:7px 6px 7px 0;border-top:1px solid var(--linea);vertical-align:top}
+  .pastilla{display:inline-block;padding:1px 7px;border-radius:99px;font-size:11px;border:1px solid var(--linea);color:var(--tenue)}
+  /* Dial de la ventana de 15 minutos: dónde estamos dentro del cuarto de hora */
+  .dial{display:flex;align-items:center;gap:10px;margin-top:10px}
+  .pista{position:relative;flex:1;height:8px;background:#0d1117;border:1px solid var(--linea);border-radius:99px;overflow:hidden}
+  .lleno{position:absolute;inset:0 auto 0 0;background:#2b3644}
+  .marca{position:absolute;top:-4px;width:2px;height:14px;background:var(--largo)}
+  .oculto{display:none}
+</style>
+</head>
+<body>
+
+<h1>Kronos-CB</h1>
+<div class="sub" id="lema">Futuros nano de BTC en Coinbase · ventanas de 15 minutos</div>
+
+<div id="acceso" class="caja">
+  <div class="rotulo">Clave del panel</div>
+  <input id="clave" type="password" autocomplete="current-password" placeholder="tu clave">
+  <button class="ancho" onclick="entrar()">Entrar</button>
+  <div id="errAcceso" class="mini" style="margin-top:8px"></div>
+</div>
+
+<div id="app" class="oculto">
+
+  <div id="aviso" class="aviso oculto"></div>
+  <div id="sinAlmacen" class="nota oculto"></div>
+
+  <div class="caja">
+    <div class="rotulo">Hoy · dinero real</div>
+    <div id="hoyPl" class="cifra">$0.00</div>
+    <div class="mini" id="hoyDetalle" style="margin-top:8px"></div>
+    <div class="dial">
+      <div class="pista"><div class="lleno" id="lleno" style="width:0%"></div><div class="marca" id="marca" style="left:66%"></div></div>
+      <div class="mini" id="reloj" style="min-width:96px;text-align:right"></div>
+    </div>
+  </div>
+
+  <div class="caja">
+    <div class="fila"><span>Acumulado real</span><b id="accPl">—</b></div>
+    <div class="fila"><span>Operaciones liquidadas</span><b id="accOps">—</b></div>
+    <div class="fila"><span>Comisiones pagadas</span><b id="accCom">—</b></div>
+    <div class="fila"><span class="mini">🛡 En sombra (dinero falso)</span><b class="mini" id="somPl">—</b></div>
+    <div class="mini" id="corteNota" style="margin-top:8px"></div>
+  </div>
+
+  <div class="caja">
+    <div class="rotulo">Estado</div>
+    <div class="fila"><span>Motor</span><b id="motor">—</b></div>
+    <div class="fila"><span>Modo</span><b id="modo">—</b></div>
+    <div class="fila"><span>Contrato</span><b id="contrato">—</b></div>
+    <div class="fila"><span>Posición</span><b id="posicion">—</b></div>
+    <div class="rejilla" style="margin-top:10px">
+      <button id="btnMotor" onclick="alternarMotor()">Encender</button>
+      <button onclick="accion('correr')">Correr ciclo ahora</button>
+    </div>
+    <button class="ancho peligro" onclick="panico()">Cerrar posición y apagar</button>
+  </div>
+
+  <div class="caja">
+    <div class="rotulo">Ajustes de la estrategia</div>
+    <div class="rejilla">
+      <div><label>Contrato</label>
+        <select id="a_prefijoProducto"><option value="BIP">BIP · perpetuo</option><option value="BIT">BIT · mensual</option></select></div>
+      <div><label>Contratos por operación</label><input id="a_contratos" type="number" min="1" max="5"></div>
+      <div><label>Entra a N min del cierre</label><input id="a_minutosAntes" type="number" min="1" max="14"></div>
+      <div><label>Tolerancia (min)</label><input id="a_tolMin" type="number" step="0.25" min="0.25" max="5"></div>
+      <div><label>Minutos de momentum</label><input id="a_momentumMin" type="number" min="3" max="60"></div>
+      <div><label>Umbral (veces el ruido)</label><input id="a_umbralSigma" type="number" step="0.1" min="0" max="6"></div>
+      <div><label>Deriva mínima ($)</label><input id="a_minDerivaUsd" type="number" min="0"></div>
+      <div><label>Stop ($)</label><input id="a_stopUsd" type="number" step="0.5" min="0.5"></div>
+      <div><label>Objetivo ($)</label><input id="a_objetivoUsd" type="number" step="0.5" min="0.5"></div>
+      <div><label>Tope de pérdida al día ($)</label><input id="a_maxPerdidaUsd" type="number" step="1" min="1"></div>
+      <div><label>Máx. operaciones al día</label><input id="a_maxOperacionesDia" type="number" min="1" max="96"></div>
+      <div><label>Salidas automáticas</label>
+        <select id="a_salidas">
+          <option value="ambos">objetivo y cierre</option>
+          <option value="cierre">solo cierre de ventana</option>
+          <option value="objetivo">solo objetivo/stop</option>
+        </select></div>
+    </div>
+    <button class="ancho bien" onclick="guardarAjustes()">Guardar ajustes</button>
+    <div class="mini" id="ajustesNota" style="margin-top:8px"></div>
+  </div>
+
+  <div class="caja">
+    <div class="rotulo">Herramientas</div>
+    <button class="ancho" onclick="probar()">Probar conexión con Coinbase</button>
+    <button class="ancho" onclick="exportar()">Descargar señales (CSV)</button>
+    <button class="ancho" onclick="cambiarModo()">Cambiar entre sombra y real</button>
+    <button class="ancho" onclick="reiniciarContador()">Reiniciar contador (no borra nada)</button>
+    <button class="ancho peligro" onclick="borrar()">Borrar historial de señales</button>
+    <pre id="salidaHerramientas" class="mini" style="white-space:pre-wrap;margin-top:10px"></pre>
+  </div>
+
+  <div class="caja">
+    <div class="rotulo">Señales recientes</div>
+    <table><thead><tr><th>Hora</th><th>Qué pasó</th><th style="text-align:right">P&amp;L</th></tr></thead>
+    <tbody id="tabla"></tbody></table>
+  </div>
+
+  <div class="mini" id="pie"></div>
+</div>
+
+<script>
+let CLAVE = sessionStorage.getItem('clave-kronos') || '';
+let D = null;
+
+function hora(iso){ if(!iso) return '—';
+  return new Date(iso).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}); }
+function fechaHora(iso){ if(!iso) return '—';
+  return new Date(iso).toLocaleString([], {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'}); }
+function usd(c){ const v=(c||0)/100; return (v<0?'-$':'$')+Math.abs(v).toFixed(2); }
+function clase(c){ return (c||0)>0?'bueno':((c||0)<0?'malo':''); }
+
+async function pedir(ruta, opciones){
+  const o = Object.assign({headers:{'x-clave':CLAVE,'content-type':'application/json'}}, opciones||{});
+  const r = await fetch('/api/panel'+ruta, o);
+  if(r.status===401) throw new Error('clave incorrecta');
+  return r.json();
+}
+
+async function entrar(){
+  CLAVE = document.getElementById('clave').value.trim();
+  try{
+    const d = await pedir('?accion=estado');
+    if(d.ok===false) throw new Error(d.error||'no pude entrar');
+    sessionStorage.setItem('clave-kronos', CLAVE);
+    document.getElementById('acceso').classList.add('oculto');
+    document.getElementById('app').classList.remove('oculto');
+    pinta(d); setInterval(refrescar, 20000); setInterval(pintaReloj, 1000);
+  }catch(e){ document.getElementById('errAcceso').textContent = e.message; }
+}
+
+async function refrescar(){ try{ pinta(await pedir('?accion=estado')); }catch(e){} }
+
+function pinta(d){
+  if(!d || d.ok===false) return;
+  D = d;
+  const s = d.stats, e = d.estado;
+
+  document.getElementById('hoyPl').textContent = usd(s.hoyReal.plCents);
+  document.getElementById('hoyPl').className = 'cifra '+clase(s.hoyReal.plCents);
+  document.getElementById('hoyDetalle').textContent =
+    `${s.hoyReal.liquidadas} liquidadas · ${s.hoyReal.ganadas} ganadas · ${s.hoyReal.perdidas} perdidas · ${s.fantasmas} fantasmas`;
+
+  document.getElementById('accPl').textContent = usd(s.acumuladoReal.plCents);
+  document.getElementById('accPl').className = clase(s.acumuladoReal.plCents);
+  document.getElementById('accOps').textContent = s.acumuladoReal.liquidadas;
+  document.getElementById('accCom').textContent = usd(s.acumuladoReal.comisionCents);
+  document.getElementById('somPl').textContent = usd(s.sombra.plCents)+' · '+s.sombra.liquidadas+' liquidadas — esto NO es dinero';
+  document.getElementById('corteNota').textContent = s.corte
+    ? 'El contador cuenta desde el '+fechaHora(s.corte)+'. Lo anterior sigue guardado y se puede descargar.' : '';
+
+  document.getElementById('motor').textContent = e.encendido ? 'encendido' : 'apagado';
+  document.getElementById('motor').className = e.encendido ? 'bueno' : 'malo';
+  document.getElementById('btnMotor').textContent = e.encendido ? 'Apagar' : 'Encender';
+  document.getElementById('modo').textContent = e.modo === 'real' ? 'DINERO REAL' : 'sombra (falso)';
+  document.getElementById('modo').className = e.modo === 'real' ? 'malo' : '';
+  document.getElementById('contrato').textContent = e.producto ? e.producto.id : '—';
+
+  const p = e.posicion;
+  const posEl = document.getElementById('posicion');
+  posEl.textContent = p ? `${p.lado} · ${p.contratos} contrato(s) a ${p.precioEntrada}` : 'ninguna';
+  posEl.className = p ? (p.lado==='largo'?'largo':'corto') : '';
+
+  const a = d.ajustes;
+  const v = (id,val)=>{ const el=document.getElementById(id); if(el && document.activeElement!==el) el.value = val; };
+  v('a_prefijoProducto', a.prefijoProducto); v('a_contratos', a.contratos);
+  v('a_minutosAntes', a.minutosAntes); v('a_tolMin', a.tolMin);
+  v('a_momentumMin', a.momentumMin); v('a_umbralSigma', a.umbralSigma);
+  v('a_minDerivaUsd', a.minDerivaUsd); v('a_stopUsd', (a.stopCents/100).toFixed(2));
+  v('a_objetivoUsd', (a.objetivoCents/100).toFixed(2));
+  v('a_maxPerdidaUsd', (a.maxPerdidaDiaCents/100).toFixed(2));
+  v('a_maxOperacionesDia', a.maxOperacionesDia);
+  v('a_salidas', a.usarObjetivo && a.salirAlCierre ? 'ambos' : (a.salirAlCierre ? 'cierre' : 'objetivo'));
+
+  const av = document.getElementById('aviso');
+  if(e.aviso){ av.textContent = e.aviso; av.classList.remove('oculto'); } else av.classList.add('oculto');
+
+  const sa = document.getElementById('sinAlmacen');
+  if(!d.entorno.almacen){
+    sa.textContent = 'Sin Redis conectado: el bot no recuerda nada entre minutos y NO ordenará en real. Conecta Upstash en Vercel → Storage.';
+    sa.classList.remove('oculto');
+  } else if(!d.entorno.credenciales){
+    sa.textContent = 'Sin credenciales de Coinbase: puede mirar el mercado pero no operar. Faltan COINBASE_KEY_NAME y COINBASE_KEY_SECRET.';
+    sa.classList.remove('oculto');
+  } else sa.classList.add('oculto');
+
+  const filas = (d.senales||[]).map(s=>{
+    let qué, cls='';
+    if(s.estado==='fantasma') qué = '👻 '+(s.vetadaPor||'vetada');
+    else if(s.estado==='error') qué = '⚠️ '+(s.nota||'error');
+    else if(s.estado==='abierta') qué = (s.lado==='largo'?'▲ largo':'▼ corto')+' abierta a '+s.precioEntrada;
+    else { qué = (s.lado==='largo'?'▲ largo':'▼ corto')+' · '+(s.motivoSalida||'cerrada'); cls = clase(s.plCents); }
+    const sombra = s.modo==='sombra' ? ' <span class="pastilla">sombra</span>' : '';
+    return `<tr><td>${hora(s.creada)}</td><td>${qué}${sombra}</td>
+      <td style="text-align:right" class="${cls}">${s.estado==='cerrada'?usd(s.plCents):''}</td></tr>`;
+  }).join('');
+  document.getElementById('tabla').innerHTML = filas || '<tr><td colspan="3" class="mini">todavía nada</td></tr>';
+  document.getElementById('lema').textContent =
+    `Futuros nano de BTC en Coinbase · ventanas de 15 min · ${d.sello||d.ver}`;
+  document.getElementById('pie').textContent =
+    `${s.total} señales guardadas · actualizado ${hora(d.ahora)}`;
+  pintaReloj();
+}
+
+// Dónde estamos dentro del cuarto de hora, y dónde está la marca de entrada.
+function pintaReloj(){
+  const ahora = new Date();
+  const ms = ahora.getTime();
+  const cierre = Math.ceil((ms+1)/900000)*900000;
+  const faltan = (cierre-ms)/60000;
+  document.getElementById('lleno').style.width = ((15-faltan)/15*100).toFixed(1)+'%';
+  const entra = D && D.ajustes ? D.ajustes.minutosAntes : 5;
+  document.getElementById('marca').style.left = ((15-entra)/15*100).toFixed(1)+'%';
+  document.getElementById('reloj').textContent =
+    faltan.toFixed(1)+' min al cierre';
+}
+
+async function accion(nombre, extra){
+  const cuerpo = Object.assign({accion:nombre}, extra||{});
+  const d = await pedir('?accion='+nombre, {method:'POST', body: JSON.stringify(cuerpo)});
+  if(d.ok===false){ alert(d.error); return null; }
+  pinta(d); return d;
+}
+
+function alternarMotor(){
+  if(!D) return;
+  if(!D.estado.encendido && D.estado.modo==='real'){
+    if(!confirm('Vas a encender el bot en DINERO REAL.\n\n1 contrato = 0,01 BTC. Con BTC a ~$63.000 son ~$630 de exposición y el stop está en $'+ (D.ajustes.stopCents/100).toFixed(2)+'.\n\n¿Seguimos?')) return;
+  }
+  accion(D.estado.encendido ? 'apagar' : 'encender');
+}
+
+function panico(){
+  if(!confirm('Cierro la posición que haya y apago el bot. ¿Seguimos?')) return;
+  accion('panico');
+}
+
+async function cambiarModo(){
+  if(!D) return;
+  const nuevo = D.estado.modo === 'real' ? 'sombra' : 'real';
+  let confirmo = '';
+  if(nuevo === 'real'){
+    confirmo = prompt('Vas a pasar a DINERO REAL. Escribe: DINERO REAL');
+    if(confirmo !== 'DINERO REAL') return;
+  }
+  const d = await pedir('?accion=modo', {method:'POST', body: JSON.stringify({accion:'modo', modo:nuevo, confirmo})});
+  if(d.ok===false){ alert(d.error); return; }
+  pinta(d);
+}
+
+async function guardarAjustes(){
+  const n = id => Number(document.getElementById(id).value);
+  const salidas = document.getElementById('a_salidas').value;
+  const ajustes = {
+    prefijoProducto: document.getElementById('a_prefijoProducto').value,
+    contratos: n('a_contratos'), minutosAntes: n('a_minutosAntes'), tolMin: n('a_tolMin'),
+    momentumMin: n('a_momentumMin'), umbralSigma: n('a_umbralSigma'), minDerivaUsd: n('a_minDerivaUsd'),
+    stopCents: Math.round(n('a_stopUsd')*100), objetivoCents: Math.round(n('a_objetivoUsd')*100),
+    maxPerdidaDiaCents: Math.round(n('a_maxPerdidaUsd')*100),
+    maxOperacionesDia: n('a_maxOperacionesDia'),
+    usarObjetivo: salidas !== 'cierre', salirAlCierre: salidas !== 'objetivo',
+  };
+  const d = await pedir('?accion=ajustes', {method:'POST', body: JSON.stringify({accion:'ajustes', ajustes})});
+  if(d.ok===false){ alert(d.error); return; }
+  pinta(d);
+  document.getElementById('ajustesNota').textContent = 'Guardado a las '+hora(d.ahora)+'. Los valores fuera de rango se ajustan solos.';
+}
+
+async function probar(){
+  const el = document.getElementById('salidaHerramientas');
+  el.textContent = 'probando…';
+  const d = await pedir('?accion=prueba');
+  el.textContent = d.prueba ? Object.entries(d.prueba).map(([k,v])=>k+': '+v).join('\n') : (d.error||'sin respuesta');
+}
+
+function exportar(){
+  window.location = '/api/panel?accion=export&clave='+encodeURIComponent(CLAVE);
+}
+
+async function reiniciarContador(){
+  if(!confirm('Reinicio el contador de dinero desde ahora.\n\nEl historial NO se borra: sigue guardado y se puede descargar. ¿Seguimos?')) return;
+  accion('reiniciar-contador');
+}
+
+// Tres cerrojos, igual que en los otros bots: descarga primero, escribir BORRAR,
+// y confirmación final diciendo cuántas señales se pierden.
+async function borrar(){
+  if(!D) return;
+  const cuantas = D.stats.total;
+  if(!confirm('Antes de borrar te descargo el CSV. Si el archivo no baja, cancela.')) return;
+  exportar();
+  await new Promise(r => setTimeout(r, 2500));
+  const escrito = prompt('Esto no se puede deshacer. Escribe BORRAR en mayúsculas:');
+  if(escrito !== 'BORRAR') return;
+  if(!confirm('Última vez: se pierden '+cuantas+' señales para siempre.\n\nRecuerda que para empezar de cero NO hace falta borrar: "Reiniciar contador" ya deja el histórico guardado.')) return;
+  const d = await pedir('?accion=borrar-historial', {method:'POST', body: JSON.stringify({accion:'borrar-historial', confirmo:'BORRAR', cuantas})});
+  if(d.ok===false){ alert(d.error); return; }
+  pinta(d);
+}
+
+if(CLAVE){ document.getElementById('clave').value = CLAVE; entrar(); }
+</script>
+</body>
+</html>
