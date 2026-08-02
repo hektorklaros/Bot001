@@ -1,0 +1,7 @@
+{
+  "name": "kronos-cb",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Bot de futuros nano de BTC en Coinbase, corriendo en Vercel",
+  "engines": { "node": ">=20" }
+}
