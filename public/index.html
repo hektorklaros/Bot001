@@ -3,98 +3,203 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0B0E14">
 <title>KRONOS-CB ᚠᛏᛃ · futuros BTC en Coinbase</title>
 <style>
   :root{
-    --fondo:#0e1116; --panel:#161b23; --linea:#252c37; --texto:#e6ebf2;
-    --tenue:#8e9aab; --largo:#f0a500; --corto:#4a9cf5; --malo:#e5484d; --bueno:#3dd68c;
+    --tinta:#0B0E14; --panel:#141922; --hondo:#0E131A; --linea:#232C39;
+    --texto:#E8ECF2; --tenue:#7C8899; --apagado:#4A5568;
+    --largo:#E8A33D; --corto:#5B9BD5; --gana:#63C79B; --pierde:#E0616A;
+    --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--fondo);color:var(--texto);
-    font:15px/1.45 ui-sans-serif,-apple-system,"SF Pro Text",system-ui,sans-serif;
-    padding:14px 14px 60px;-webkit-text-size-adjust:100%}
-  h1{font-size:15px;letter-spacing:.14em;text-transform:uppercase;margin:0 0 2px;font-weight:600}
-  /* Las runas no se escalan ni se espacian como el resto del título: en el móvil
-     el interletrado del h1 las separa demasiado y se leen como tres símbolos sueltos. */
-  .runas{letter-spacing:.04em;font-size:16px;color:var(--largo);vertical-align:1px}
-  .sub{color:var(--tenue);font-size:12px;margin-bottom:14px}
-  .caja{background:var(--panel);border:1px solid var(--linea);border-radius:12px;padding:14px;margin-bottom:12px}
-  .rotulo{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--tenue);margin-bottom:8px}
-  .cifra{font-variant-numeric:tabular-nums;font-weight:700;font-size:40px;line-height:1;letter-spacing:-.02em}
-  .mini{font-variant-numeric:tabular-nums;font-size:13px;color:var(--tenue)}
-  .fila{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px solid var(--linea)}
-  .fila:last-child{border-bottom:0}
-  .fila b{font-weight:600;font-variant-numeric:tabular-nums}
-  button{font:inherit;font-weight:600;color:var(--texto);background:#1f2733;border:1px solid var(--linea);
-    border-radius:9px;padding:11px 13px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--tinta);color:var(--texto);font:15px/1.5 var(--sans);
+    padding:14px 13px calc(28px + env(safe-area-inset-bottom));
+    background-image:radial-gradient(120% 60% at 50% 0%,#121826 0%,var(--tinta) 60%);
+    background-attachment:fixed}
+  :focus-visible{outline:2px solid var(--largo);outline-offset:2px;border-radius:6px}
+
+  /* ---------- cabecera ---------- */
+  .marca{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
+  .marca b{font:600 15px/1 var(--mono);letter-spacing:.22em;text-transform:uppercase}
+  .runas{font-size:17px;color:var(--largo);letter-spacing:.05em;line-height:1}
+  .sello{font:11px/1.4 var(--mono);color:var(--apagado);letter-spacing:.06em;margin:5px 0 12px}
+  .pastillas{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+  .pastilla{font:11px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;
+    padding:6px 10px;border-radius:99px;border:1px solid var(--linea);color:var(--tenue);
+    display:inline-flex;align-items:center;gap:6px}
+  .punto{width:6px;height:6px;border-radius:50%;background:currentColor}
+  .pastilla.vivo{color:var(--gana);border-color:#1F4A3A}
+  .pastilla.quieto{color:var(--apagado)}
+  .pastilla.real{color:var(--pierde);border-color:#4A2229}
+  .pastilla.sombra{color:var(--corto);border-color:#22384F}
+
+  /* ---------- bloques ---------- */
+  .caja{background:var(--panel);border:1px solid var(--linea);border-radius:14px;
+    padding:15px;margin-bottom:11px}
+  .rotulo{font:11px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;
+    color:var(--apagado);margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .rotulo span{letter-spacing:.06em;text-transform:none;color:var(--tenue)}
+
+  /* ---------- el cuarto de hora (firma) ---------- */
+  .dial{display:grid;grid-template-columns:repeat(15,1fr);gap:3px;margin-bottom:10px}
+  .tic{height:26px;border-radius:3px;background:var(--hondo);border:1px solid var(--linea);position:relative}
+  .tic.ido{background:#1C2431;border-color:#2A3546}
+  .tic.entrada{border-color:var(--largo)}
+  .tic.entrada::after{content:"";position:absolute;left:50%;bottom:-7px;transform:translateX(-50%);
+    width:3px;height:3px;border-radius:50%;background:var(--largo)}
+  .tic.ahora{background:var(--largo);border-color:var(--largo)}
+  .relojpie{display:flex;justify-content:space-between;font:11px/1 var(--mono);color:var(--tenue);letter-spacing:.05em}
+
+  /* ---------- la cinta ---------- */
+  .cinta{display:flex;align-items:flex-end;gap:2px;height:44px;margin-top:14px;
+    padding-top:8px;border-top:1px solid var(--linea)}
+  .barra{flex:1;min-width:2px;border-radius:1px;background:var(--apagado);opacity:.45}
+  .barra.gana{background:var(--gana);opacity:1}
+  .barra.pierde{background:var(--pierde);opacity:1}
+  .barra.abierta{background:var(--largo);opacity:1}
+  .barra.error{background:var(--pierde);opacity:.6}
+  .barra.sombra{opacity:.35}
+  .leyenda{display:flex;gap:12px;flex-wrap:wrap;margin-top:9px;font:11px/1 var(--mono);color:var(--apagado)}
+  .leyenda i{width:8px;height:8px;border-radius:2px;display:inline-block;margin-right:5px;vertical-align:-1px}
+
+  /* ---------- dinero ---------- */
+  .cifra{font:700 44px/1 var(--mono);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  .cifra.gana{color:var(--gana)} .cifra.pierde{color:var(--pierde)}
+  .desglose{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px;
+    padding-top:14px;border-top:1px solid var(--linea)}
+  .dato dt{font:10px/1.3 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--apagado);margin:0 0 5px}
+  .dato dd{margin:0;font:600 16px/1 var(--mono);font-variant-numeric:tabular-nums}
+  .sombraNota{margin-top:13px;padding:9px 11px;border-radius:9px;background:var(--hondo);
+    border:1px solid var(--linea);font:12px/1.4 var(--mono);color:var(--tenue)}
+
+  /* ---------- gráfico ---------- */
+  .lienzo{width:100%;height:120px;display:block}
+  .vacio{font:12px/1.5 var(--sans);color:var(--apagado);text-align:center;padding:26px 10px}
+
+  /* ---------- motivos ---------- */
+  .motivo{margin-bottom:11px}
+  .motivo:last-child{margin-bottom:0}
+  .motivoFila{display:flex;justify-content:space-between;gap:10px;font:12px/1.3 var(--mono);margin-bottom:5px}
+  .motivoFila em{font-style:normal;color:var(--tenue)}
+  .motivoFila b{font-weight:600;font-variant-numeric:tabular-nums}
+  .pista{height:5px;border-radius:99px;background:var(--hondo);overflow:hidden}
+  .relleno{height:100%;background:var(--apagado);border-radius:99px}
+  .motivo:first-child .relleno{background:var(--corto)}
+
+  /* ---------- filas ---------- */
+  .fila{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--linea);font-size:14px}
+  .fila:last-of-type{border-bottom:0}
+  .fila b{font:600 14px/1.4 var(--mono);font-variant-numeric:tabular-nums;text-align:right}
+
+  /* ---------- controles ---------- */
+  button{font:600 14px/1 var(--sans);color:var(--texto);background:#1C2431;
+    border:1px solid var(--linea);border-radius:10px;padding:13px;cursor:pointer;
+    -webkit-tap-highlight-color:transparent;transition:transform .08s ease,border-color .15s ease}
   button:active{transform:translateY(1px)}
-  button.ancho{width:100%;margin-top:8px}
-  button.peligro{border-color:#5a2326;color:#ff9ea1}
-  button.bien{border-color:#245c43;color:var(--bueno)}
-  input,select{font:inherit;color:var(--texto);background:#0d1117;border:1px solid var(--linea);
-    border-radius:8px;padding:9px 10px;width:100%}
-  label{display:block;font-size:12px;color:var(--tenue);margin:9px 0 3px}
-  .rejilla{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  .aviso{background:#2a1416;border:1px solid #5a2326;color:#ffb4b6;border-radius:10px;padding:11px;margin-bottom:12px;font-size:13.5px}
-  .nota{background:#12212c;border:1px solid #24435a;color:#a9cbe4;border-radius:10px;padding:11px;margin-bottom:12px;font-size:13px}
-  .largo{color:var(--largo)} .corto{color:var(--corto)}
-  .bueno{color:var(--bueno)} .malo{color:var(--malo)}
-  table{width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums}
-  th{text-align:left;color:var(--tenue);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.08em;padding:6px 6px 6px 0}
-  td{padding:7px 6px 7px 0;border-top:1px solid var(--linea);vertical-align:top}
-  .pastilla{display:inline-block;padding:1px 7px;border-radius:99px;font-size:11px;border:1px solid var(--linea);color:var(--tenue)}
-  /* Dial de la ventana de 15 minutos: dónde estamos dentro del cuarto de hora */
-  .dial{display:flex;align-items:center;gap:10px;margin-top:10px}
-  .pista{position:relative;flex:1;height:8px;background:#0d1117;border:1px solid var(--linea);border-radius:99px;overflow:hidden}
-  .lleno{position:absolute;inset:0 auto 0 0;background:#2b3644}
-  .marca{position:absolute;top:-4px;width:2px;height:14px;background:var(--largo)}
+  .par{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+  .ancho{width:100%;margin-top:9px}
+  .peligro{border-color:#4A2229;color:#FF9EA1}
+  .principal{border-color:#1F4A3A;color:var(--gana)}
+  input,select{font:14px/1 var(--mono);color:var(--texto);background:var(--hondo);
+    border:1px solid var(--linea);border-radius:9px;padding:11px 10px;width:100%}
+  label{display:block;font:10px/1.3 var(--mono);letter-spacing:.1em;text-transform:uppercase;
+    color:var(--apagado);margin:12px 0 5px}
+  .rejilla{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+
+  /* ---------- avisos ---------- */
+  .aviso{border-radius:12px;padding:13px;margin-bottom:11px;font-size:13.5px;line-height:1.45}
+  .aviso.rojo{background:#1E1216;border:1px solid #4A2229;color:#FFB4B6}
+  .aviso.azul{background:#0F1A24;border:1px solid #23425C;color:#A9CBE4}
+
+  /* ---------- tabla ---------- */
+  table{width:100%;border-collapse:collapse;font:12.5px/1.4 var(--mono);font-variant-numeric:tabular-nums}
+  th{text-align:left;font:10px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;
+    color:var(--apagado);font-weight:400;padding:0 8px 9px 0}
+  td{padding:8px 8px 8px 0;border-top:1px solid var(--linea);vertical-align:top;color:var(--tenue)}
+  td.hecho{color:var(--texto)}
+  .marcaLado{color:var(--largo)} .marcaLado.corto{color:var(--corto)}
+  .gana{color:var(--gana)} .pierde{color:var(--pierde)}
+  .pie{font:11px/1.5 var(--mono);color:var(--apagado);text-align:center;margin-top:16px;letter-spacing:.05em}
   .oculto{display:none}
+  .salida{font:11.5px/1.6 var(--mono);color:var(--tenue);white-space:pre-wrap;margin-top:11px}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
 <body>
 
-<h1>Kronos-CB <span class="runas">ᚠᛏᛃ</span></h1>
-<div class="sub" id="lema">Futuros nano de BTC en Coinbase · ventanas de 15 minutos</div>
+<div class="marca"><b>Kronos-CB</b><span class="runas">ᚠᛏᛃ</span></div>
+<div class="sello" id="sello">futuros nano de BTC · ventanas de 15 minutos</div>
 
 <div id="acceso" class="caja">
   <div class="rotulo">Clave del panel</div>
   <input id="clave" type="password" autocomplete="current-password" placeholder="tu clave">
-  <button class="ancho" onclick="entrar()">Entrar</button>
-  <div id="errAcceso" class="mini" style="margin-top:8px"></div>
+  <button class="ancho principal" onclick="entrar()">Entrar</button>
+  <div id="errAcceso" class="salida"></div>
 </div>
 
 <div id="app" class="oculto">
 
-  <div id="aviso" class="aviso oculto"></div>
-  <div id="sinAlmacen" class="nota oculto"></div>
+  <div class="pastillas">
+    <span class="pastilla" id="pMotor"><i class="punto"></i><span id="tMotor">—</span></span>
+    <span class="pastilla" id="pModo"><span id="tModo">—</span></span>
+    <span class="pastilla" id="pContrato">—</span>
+  </div>
 
+  <div id="aviso" class="aviso rojo oculto"></div>
+  <div id="nota" class="aviso azul oculto"></div>
+
+  <!-- firma: el cuarto de hora y la cinta de ventanas -->
   <div class="caja">
-    <div class="rotulo">Hoy · dinero real</div>
-    <div id="hoyPl" class="cifra">$0.00</div>
-    <div class="mini" id="hoyDetalle" style="margin-top:8px"></div>
-    <div class="dial">
-      <div class="pista"><div class="lleno" id="lleno" style="width:0%"></div><div class="marca" id="marca" style="left:66%"></div></div>
-      <div class="mini" id="reloj" style="min-width:96px;text-align:right"></div>
+    <div class="rotulo">Cuarto de hora <span id="reloj">—</span></div>
+    <div class="dial" id="dial"></div>
+    <div class="relojpie"><span id="ventanaDesde">—</span><span id="ventanaHasta">cierre</span></div>
+    <div class="cinta" id="cinta"></div>
+    <div class="leyenda">
+      <span><i style="background:var(--gana)"></i>ganada</span>
+      <span><i style="background:var(--pierde)"></i>perdida</span>
+      <span><i style="background:var(--largo)"></i>abierta</span>
+      <span><i style="background:var(--apagado);opacity:.5"></i>vetada</span>
     </div>
   </div>
 
   <div class="caja">
-    <div class="fila"><span>Acumulado real</span><b id="accPl">—</b></div>
-    <div class="fila"><span>Operaciones liquidadas</span><b id="accOps">—</b></div>
-    <div class="fila"><span>Comisiones pagadas</span><b id="accCom">—</b></div>
-    <div class="fila"><span class="mini">🛡 En sombra (dinero falso)</span><b class="mini" id="somPl">—</b></div>
-    <div class="mini" id="corteNota" style="margin-top:8px"></div>
+    <div class="rotulo">Hoy · dinero real</div>
+    <div id="hoyPl" class="cifra">$0.00</div>
+    <dl class="desglose">
+      <div class="dato"><dt>Liquidadas</dt><dd id="hoyOps">0</dd></div>
+      <div class="dato"><dt>Ganadas</dt><dd id="hoyGana">0</dd></div>
+      <div class="dato"><dt>Vetadas</dt><dd id="hoyVeto">0</dd></div>
+    </dl>
+    <div class="sombraNota" id="sombraNota">—</div>
+  </div>
+
+  <div class="caja">
+    <div class="rotulo">Acumulado <span id="curvaPie">—</span></div>
+    <svg class="lienzo" id="lienzo" viewBox="0 0 320 120" preserveAspectRatio="none" aria-hidden="true"></svg>
+    <div id="curvaVacia" class="vacio oculto">Todavía no hay operaciones liquidadas. La curva aparece con la primera.</div>
+    <dl class="desglose">
+      <div class="dato"><dt>Real</dt><dd id="accPl">—</dd></div>
+      <div class="dato"><dt>Comisiones</dt><dd id="accCom">—</dd></div>
+      <div class="dato"><dt>Sombra</dt><dd id="somPl">—</dd></div>
+    </dl>
+  </div>
+
+  <div class="caja">
+    <div class="rotulo">Por qué no operó <span id="motivosPie">—</span></div>
+    <div id="motivos"></div>
   </div>
 
   <div class="caja">
     <div class="rotulo">Estado</div>
-    <div class="fila"><span>Motor</span><b id="motor">—</b></div>
-    <div class="fila"><span>Modo</span><b id="modo">—</b></div>
     <div class="fila"><span>Contrato</span><b id="contrato">—</b></div>
     <div class="fila"><span>Posición</span><b id="posicion">—</b></div>
-    <div class="rejilla" style="margin-top:10px">
+    <div class="fila"><span>Operaciones hoy</span><b id="opsHoy">—</b></div>
+    <div class="par" style="margin-top:13px">
       <button id="btnMotor" onclick="alternarMotor()">Encender</button>
-      <button onclick="accion('correr')">Correr ciclo ahora</button>
+      <button onclick="accion('correr')">Correr ciclo</button>
     </div>
     <button class="ancho peligro" onclick="panico()">Cerrar posición y apagar</button>
   </div>
@@ -104,25 +209,27 @@
     <div class="rejilla">
       <div><label>Contrato</label>
         <select id="a_prefijoProducto"><option value="BIP">BIP · perpetuo</option><option value="BIT">BIT · mensual</option></select></div>
-      <div><label>Contratos por operación</label><input id="a_contratos" type="number" min="1" max="5"></div>
-      <div><label>Entra a N min del cierre</label><input id="a_minutosAntes" type="number" min="1" max="14"></div>
-      <div><label>Tolerancia (min)</label><input id="a_tolMin" type="number" step="0.25" min="0.25" max="5"></div>
-      <div><label>Minutos de momentum</label><input id="a_momentumMin" type="number" min="3" max="60"></div>
-      <div><label>Umbral (veces el ruido)</label><input id="a_umbralSigma" type="number" step="0.1" min="0" max="6"></div>
-      <div><label>Deriva mínima ($)</label><input id="a_minDerivaUsd" type="number" min="0"></div>
-      <div><label>Stop ($)</label><input id="a_stopUsd" type="number" step="0.5" min="0.5"></div>
-      <div><label>Objetivo ($)</label><input id="a_objetivoUsd" type="number" step="0.5" min="0.5"></div>
-      <div><label>Tope de pérdida al día ($)</label><input id="a_maxPerdidaUsd" type="number" step="1" min="1"></div>
-      <div><label>Máx. operaciones al día</label><input id="a_maxOperacionesDia" type="number" min="1" max="96"></div>
-      <div><label>Salidas automáticas</label>
+      <div><label>Contratos</label><input id="a_contratos" type="number" min="1" max="1"></div>
+      <div><label>Entra a N min</label><input id="a_minutosAntes" type="number" min="1" max="14"></div>
+      <div><label>Tolerancia</label><input id="a_tolMin" type="number" step="0.25" min="0.25" max="5"></div>
+      <div><label>Momentum (min)</label><input id="a_momentumMin" type="number" min="3" max="60"></div>
+      <div><label>Umbral sigma</label><input id="a_umbralSigma" type="number" step="0.1" min="0" max="6"></div>
+      <div><label>Deriva mínima $</label><input id="a_minDerivaUsd" type="number" min="0"></div>
+      <div><label>Coherencia</label><input id="a_minCoherencia" type="number" step="0.05" min="0" max="1"></div>
+      <div><label>Múltiplo peaje</label><input id="a_multiploCoste" type="number" step="0.5" min="0" max="20"></div>
+      <div><label>Stop $</label><input id="a_stopUsd" type="number" step="0.5" min="0.5"></div>
+      <div><label>Objetivo $</label><input id="a_objetivoUsd" type="number" step="0.5" min="0.5"></div>
+      <div><label>Tope diario $</label><input id="a_maxPerdidaUsd" type="number" step="1" min="1"></div>
+      <div><label>Máx. al día</label><input id="a_maxOperacionesDia" type="number" min="1" max="96"></div>
+      <div><label>Salidas</label>
         <select id="a_salidas">
           <option value="ambos">objetivo y cierre</option>
-          <option value="cierre">solo cierre de ventana</option>
-          <option value="objetivo">solo objetivo/stop</option>
+          <option value="cierre">solo cierre</option>
+          <option value="objetivo">solo objetivo</option>
         </select></div>
     </div>
-    <button class="ancho bien" onclick="guardarAjustes()">Guardar ajustes</button>
-    <div class="mini" id="ajustesNota" style="margin-top:8px"></div>
+    <button class="ancho principal" onclick="guardarAjustes()">Guardar ajustes</button>
+    <div class="salida" id="ajustesNota"></div>
   </div>
 
   <div class="caja">
@@ -130,9 +237,9 @@
     <button class="ancho" onclick="probar()">Probar conexión con Coinbase</button>
     <button class="ancho" onclick="exportar()">Descargar señales (CSV)</button>
     <button class="ancho" onclick="cambiarModo()">Cambiar entre sombra y real</button>
-    <button class="ancho" onclick="reiniciarContador()">Reiniciar contador (no borra nada)</button>
+    <button class="ancho" onclick="reiniciarContador()">Reiniciar contador</button>
     <button class="ancho peligro" onclick="borrar()">Borrar historial de señales</button>
-    <pre id="salidaHerramientas" class="mini" style="white-space:pre-wrap;margin-top:10px"></pre>
+    <pre id="salidaHerramientas" class="salida"></pre>
   </div>
 
   <div class="caja">
@@ -141,19 +248,17 @@
     <tbody id="tabla"></tbody></table>
   </div>
 
-  <div class="mini" id="pie"></div>
+  <div class="pie" id="pie"></div>
 </div>
 
 <script>
 let CLAVE = sessionStorage.getItem('clave-kronos') || '';
 let D = null;
 
-function hora(iso){ if(!iso) return '—';
-  return new Date(iso).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}); }
-function fechaHora(iso){ if(!iso) return '—';
-  return new Date(iso).toLocaleString([], {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'}); }
-function usd(c){ const v=(c||0)/100; return (v<0?'-$':'$')+Math.abs(v).toFixed(2); }
-function clase(c){ return (c||0)>0?'bueno':((c||0)<0?'malo':''); }
+const hora = iso => iso ? new Date(iso).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '—';
+const fechaHora = iso => iso ? new Date(iso).toLocaleString([], {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '—';
+const usd = c => { const v=(c||0)/100; return (v<0?'-$':'$')+Math.abs(v).toFixed(2); };
+const signo = c => (c||0)>0 ? 'gana' : ((c||0)<0 ? 'pierde' : '');
 
 async function pedir(ruta, opciones){
   const o = Object.assign({headers:{'x-clave':CLAVE,'content-type':'application/json'}}, opciones||{});
@@ -170,7 +275,9 @@ async function entrar(){
     sessionStorage.setItem('clave-kronos', CLAVE);
     document.getElementById('acceso').classList.add('oculto');
     document.getElementById('app').classList.remove('oculto');
-    pinta(d); setInterval(refrescar, 20000); setInterval(pintaReloj, 1000);
+    pinta(d);
+    setInterval(refrescar, 20000);
+    setInterval(pintaReloj, 1000);
   }catch(e){ document.getElementById('errAcceso').textContent = e.message; }
 }
 
@@ -181,83 +288,188 @@ function pinta(d){
   D = d;
   const s = d.stats, e = d.estado;
 
-  document.getElementById('hoyPl').textContent = usd(s.hoyReal.plCents);
-  document.getElementById('hoyPl').className = 'cifra '+clase(s.hoyReal.plCents);
-  document.getElementById('hoyDetalle').textContent =
-    `${s.hoyReal.liquidadas} liquidadas · ${s.hoyReal.ganadas} ganadas · ${s.hoyReal.perdidas} perdidas · ${s.fantasmas} fantasmas`;
+  document.getElementById('sello').textContent =
+    'futuros nano de BTC · ventanas de 15 minutos · ' + (d.sello || d.ver);
 
+  // pastillas
+  const pm = document.getElementById('pMotor');
+  pm.className = 'pastilla ' + (e.encendido ? 'vivo' : 'quieto');
+  document.getElementById('tMotor').textContent = e.encendido ? 'en marcha' : 'detenido';
+  const pmo = document.getElementById('pModo');
+  pmo.className = 'pastilla ' + (e.modo==='real' ? 'real' : 'sombra');
+  document.getElementById('tModo').textContent = e.modo==='real' ? 'dinero real' : 'sombra';
+  document.getElementById('pContrato').textContent = e.producto ? e.producto.id : 'sin contrato';
+
+  // dinero de hoy
+  const hoy = document.getElementById('hoyPl');
+  hoy.textContent = usd(s.hoyReal.plCents);
+  hoy.className = 'cifra ' + signo(s.hoyReal.plCents);
+  document.getElementById('hoyOps').textContent = s.hoyReal.liquidadas;
+  document.getElementById('hoyGana').textContent = s.hoyReal.ganadas;
+  document.getElementById('hoyVeto').textContent = s.fantasmas;
+  document.getElementById('sombraNota').textContent =
+    'Sombra: ' + usd(s.sombra.plCents) + ' en ' + s.sombra.liquidadas + ' liquidadas. No es dinero.';
+
+  // acumulado
   document.getElementById('accPl').textContent = usd(s.acumuladoReal.plCents);
-  document.getElementById('accPl').className = clase(s.acumuladoReal.plCents);
-  document.getElementById('accOps').textContent = s.acumuladoReal.liquidadas;
+  document.getElementById('accPl').className = signo(s.acumuladoReal.plCents);
   document.getElementById('accCom').textContent = usd(s.acumuladoReal.comisionCents);
-  document.getElementById('somPl').textContent = usd(s.sombra.plCents)+' · '+s.sombra.liquidadas+' liquidadas — esto NO es dinero';
-  document.getElementById('corteNota').textContent = s.corte
-    ? 'El contador cuenta desde el '+fechaHora(s.corte)+'. Lo anterior sigue guardado y se puede descargar.' : '';
+  document.getElementById('somPl').textContent = usd(s.sombra.plCents);
+  document.getElementById('curvaPie').textContent =
+    s.corte ? 'desde ' + fechaHora(s.corte) : '';
+  dibujaCurva(s.curvaReal || [], s.curvaSombra || []);
 
-  document.getElementById('motor').textContent = e.encendido ? 'encendido' : 'apagado';
-  document.getElementById('motor').className = e.encendido ? 'bueno' : 'malo';
-  document.getElementById('btnMotor').textContent = e.encendido ? 'Apagar' : 'Encender';
-  document.getElementById('modo').textContent = e.modo === 'real' ? 'DINERO REAL' : 'sombra (falso)';
-  document.getElementById('modo').className = e.modo === 'real' ? 'malo' : '';
+  pintaCinta(s.cinta || []);
+  pintaMotivos(s.motivos || [], s.fantasmas);
+
+  // estado
   document.getElementById('contrato').textContent = e.producto ? e.producto.id : '—';
-
   const p = e.posicion;
-  const posEl = document.getElementById('posicion');
-  posEl.textContent = p ? `${p.lado} · ${p.contratos} contrato(s) a ${p.precioEntrada}` : 'ninguna';
-  posEl.className = p ? (p.lado==='largo'?'largo':'corto') : '';
+  const pos = document.getElementById('posicion');
+  pos.textContent = p ? (p.lado + ' · ' + p.contratos + ' a ' + p.precioEntrada) : 'ninguna';
+  pos.className = p ? ('marcaLado ' + (p.lado==='corto'?'corto':'')) : '';
+  const aj = d.ajustes;
+  document.getElementById('opsHoy').textContent =
+    (e.diario ? e.diario.operaciones : 0) + ' de ' + aj.maxOperacionesDia;
+  document.getElementById('btnMotor').textContent = e.encendido ? 'Apagar' : 'Encender';
+  document.getElementById('btnMotor').className = e.encendido ? '' : 'principal';
 
-  const a = d.ajustes;
+  // ajustes
   const v = (id,val)=>{ const el=document.getElementById(id); if(el && document.activeElement!==el) el.value = val; };
-  v('a_prefijoProducto', a.prefijoProducto); v('a_contratos', a.contratos);
-  v('a_minutosAntes', a.minutosAntes); v('a_tolMin', a.tolMin);
-  v('a_momentumMin', a.momentumMin); v('a_umbralSigma', a.umbralSigma);
-  v('a_minDerivaUsd', a.minDerivaUsd); v('a_stopUsd', (a.stopCents/100).toFixed(2));
-  v('a_objetivoUsd', (a.objetivoCents/100).toFixed(2));
-  v('a_maxPerdidaUsd', (a.maxPerdidaDiaCents/100).toFixed(2));
-  v('a_maxOperacionesDia', a.maxOperacionesDia);
-  v('a_salidas', a.usarObjetivo && a.salirAlCierre ? 'ambos' : (a.salirAlCierre ? 'cierre' : 'objetivo'));
+  v('a_prefijoProducto', aj.prefijoProducto); v('a_contratos', aj.contratos);
+  v('a_minutosAntes', aj.minutosAntes); v('a_tolMin', aj.tolMin);
+  v('a_momentumMin', aj.momentumMin); v('a_umbralSigma', aj.umbralSigma);
+  v('a_minDerivaUsd', aj.minDerivaUsd); v('a_minCoherencia', aj.minCoherencia);
+  v('a_multiploCoste', aj.multiploCoste);
+  v('a_stopUsd', (aj.stopCents/100).toFixed(2));
+  v('a_objetivoUsd', (aj.objetivoCents/100).toFixed(2));
+  v('a_maxPerdidaUsd', (aj.maxPerdidaDiaCents/100).toFixed(2));
+  v('a_maxOperacionesDia', aj.maxOperacionesDia);
+  v('a_salidas', aj.usarObjetivo && aj.salirAlCierre ? 'ambos' : (aj.salirAlCierre ? 'cierre' : 'objetivo'));
 
+  // avisos
   const av = document.getElementById('aviso');
   if(e.aviso){ av.textContent = e.aviso; av.classList.remove('oculto'); } else av.classList.add('oculto');
+  const nt = document.getElementById('nota');
+  let texto = '';
+  if(!d.entorno.almacen) texto = 'Sin Redis conectado: el bot no recuerda nada entre minutos y no ordenará en real.';
+  else if(!d.entorno.credenciales) texto = 'Sin credenciales de Coinbase: puede mirar el mercado, no operar.';
+  if(texto){ nt.textContent = texto; nt.classList.remove('oculto'); } else nt.classList.add('oculto');
 
-  const sa = document.getElementById('sinAlmacen');
-  if(!d.entorno.almacen){
-    sa.textContent = 'Sin Redis conectado: el bot no recuerda nada entre minutos y NO ordenará en real. Conecta Upstash en Vercel → Storage.';
-    sa.classList.remove('oculto');
-  } else if(!d.entorno.credenciales){
-    sa.textContent = 'Sin credenciales de Coinbase: puede mirar el mercado pero no operar. Faltan COINBASE_KEY_NAME y COINBASE_KEY_SECRET.';
-    sa.classList.remove('oculto');
-  } else sa.classList.add('oculto');
-
-  const filas = (d.senales||[]).map(s=>{
-    let qué, cls='';
-    if(s.estado==='fantasma') qué = '👻 '+(s.vetadaPor||'vetada');
-    else if(s.estado==='error') qué = '⚠️ '+(s.nota||'error');
-    else if(s.estado==='abierta') qué = (s.lado==='largo'?'▲ largo':'▼ corto')+' abierta a '+s.precioEntrada;
-    else { qué = (s.lado==='largo'?'▲ largo':'▼ corto')+' · '+(s.motivoSalida||'cerrada'); cls = clase(s.plCents); }
-    const sombra = s.modo==='sombra' ? ' <span class="pastilla">sombra</span>' : '';
-    return `<tr><td>${hora(s.creada)}</td><td>${qué}${sombra}</td>
-      <td style="text-align:right" class="${cls}">${s.estado==='cerrada'?usd(s.plCents):''}</td></tr>`;
-  }).join('');
-  document.getElementById('tabla').innerHTML = filas || '<tr><td colspan="3" class="mini">todavía nada</td></tr>';
-  document.getElementById('lema').textContent =
-    `Futuros nano de BTC en Coinbase · ventanas de 15 min · ${d.sello||d.ver}`;
+  pintaTabla(d.senales || []);
   document.getElementById('pie').textContent =
-    `${s.total} señales guardadas · actualizado ${hora(d.ahora)}`;
+    s.total + ' señales guardadas · actualizado ' + hora(d.ahora);
   pintaReloj();
 }
 
-// Dónde estamos dentro del cuarto de hora, y dónde está la marca de entrada.
+/* El cuarto de hora: 15 casillas, una por minuto. La marcada en ámbar es
+   el minuto en el que el bot mira si entra. */
 function pintaReloj(){
-  const ahora = new Date();
-  const ms = ahora.getTime();
-  const cierre = Math.ceil((ms+1)/900000)*900000;
-  const faltan = (cierre-ms)/60000;
-  document.getElementById('lleno').style.width = ((15-faltan)/15*100).toFixed(1)+'%';
+  const ahora = Date.now();
+  const cierre = Math.ceil((ahora+1)/900000)*900000;
+  const faltan = (cierre-ahora)/60000;
+  const transcurrido = 15 - faltan;
   const entra = D && D.ajustes ? D.ajustes.minutosAntes : 5;
-  document.getElementById('marca').style.left = ((15-entra)/15*100).toFixed(1)+'%';
-  document.getElementById('reloj').textContent =
-    faltan.toFixed(1)+' min al cierre';
+  const minutoEntrada = 15 - entra;
+
+  const dial = document.getElementById('dial');
+  if(dial.children.length !== 15){
+    dial.innerHTML = Array.from({length:15}, ()=>'<div class="tic"></div>').join('');
+  }
+  [...dial.children].forEach((tic,i)=>{
+    let cl = 'tic';
+    if(i < Math.floor(transcurrido)) cl += ' ido';
+    if(i === Math.floor(transcurrido)) cl += ' ahora';
+    if(i === Math.floor(minutoEntrada)) cl += ' entrada';
+    tic.className = cl;
+  });
+  document.getElementById('reloj').textContent = faltan.toFixed(1) + ' min al cierre';
+  document.getElementById('ventanaDesde').textContent =
+    'entra en el minuto ' + Math.floor(minutoEntrada);
+  document.getElementById('ventanaHasta').textContent = hora(new Date(cierre).toISOString());
+}
+
+function pintaCinta(cinta){
+  const c = document.getElementById('cinta');
+  if(!cinta.length){ c.innerHTML = '<div class="barra" style="height:3px"></div>'; return; }
+  const mayor = Math.max(6, ...cinta.map(x=>Math.abs(x.plCents||0)));
+  c.innerHTML = cinta.map(x=>{
+    let cl = 'barra', alto = 5;
+    if(x.estado==='cerrada'){
+      cl += (x.plCents||0) >= 0 ? ' gana' : ' pierde';
+      alto = 8 + Math.round(Math.abs(x.plCents||0)/mayor*26);
+    } else if(x.estado==='abierta'){ cl += ' abierta'; alto = 20; }
+    else if(x.estado==='error'){ cl += ' error'; alto = 12; }
+    if(x.modo==='sombra') cl += ' sombra';
+    const t = (x.motivo||x.estado) + ' · ' + hora(x.creada);
+    return '<div class="'+cl+'" style="height:'+alto+'px" title="'+t.replace(/"/g,'')+'"></div>';
+  }).join('');
+}
+
+function pintaMotivos(motivos, total){
+  const cont = document.getElementById('motivos');
+  document.getElementById('motivosPie').textContent = total ? total + ' vetadas' : '';
+  if(!motivos.length){
+    cont.innerHTML = '<div class="vacio">Ninguna señal vetada todavía.</div>';
+    return;
+  }
+  const mayor = motivos[0].n || 1;
+  cont.innerHTML = motivos.map(m=>`
+    <div class="motivo">
+      <div class="motivoFila"><em>${m.motivo}</em><b>${m.n}</b></div>
+      <div class="pista"><div class="relleno" style="width:${Math.max(3,Math.round(m.n/mayor*100))}%"></div></div>
+    </div>`).join('');
+}
+
+/* Curva acumulada. Real en línea sólida; sombra tenue y discontinua detrás. */
+function dibujaCurva(real, sombra){
+  const svg = document.getElementById('lienzo');
+  const vacia = document.getElementById('curvaVacia');
+  const series = [
+    {puntos: sombra, color:'var(--apagado)', guion:'3 3', ancho:1},
+    {puntos: real, color:'var(--largo)', guion:'', ancho:2},
+  ].filter(x=>x.puntos.length > 1);
+
+  if(!series.length){ svg.innerHTML=''; svg.classList.add('oculto'); vacia.classList.remove('oculto'); return; }
+  svg.classList.remove('oculto'); vacia.classList.add('oculto');
+
+  const todos = series.flatMap(x=>x.puntos.map(p=>p.plCents)).concat([0]);
+  const min = Math.min(...todos), max = Math.max(...todos);
+  const rango = (max-min) || 100;
+  const y = v => 110 - ((v-min)/rango)*100;
+  const cero = y(0);
+
+  let html = `<line x1="0" y1="${cero.toFixed(1)}" x2="320" y2="${cero.toFixed(1)}"
+    stroke="var(--linea)" stroke-width="1" vector-effect="non-scaling-stroke"/>`;
+  for(const s of series){
+    const paso = 320/(s.puntos.length-1);
+    const d = s.puntos.map((p,i)=>(i?'L':'M')+(i*paso).toFixed(1)+' '+y(p.plCents).toFixed(1)).join(' ');
+    html += `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="${s.ancho}"
+      stroke-dasharray="${s.guion}" stroke-linejoin="round" stroke-linecap="round"
+      vector-effect="non-scaling-stroke"/>`;
+  }
+  svg.innerHTML = html;
+}
+
+function pintaTabla(senales){
+  const filas = senales.map(s=>{
+    let qué, cls='', clase='';
+    if(s.estado==='fantasma'){ qué = '· ' + (s.vetadaPor||'vetada'); }
+    else if(s.estado==='error'){ qué = '! ' + (s.nota||'error'); clase='hecho'; }
+    else if(s.estado==='abierta'){
+      qué = '<span class="marcaLado '+(s.lado==='corto'?'corto':'')+'">'+
+            (s.lado==='largo'?'▲':'▼')+' '+s.lado+'</span> abierta a '+s.precioEntrada; clase='hecho';
+    } else {
+      qué = '<span class="marcaLado '+(s.lado==='corto'?'corto':'')+'">'+
+            (s.lado==='largo'?'▲':'▼')+'</span> '+(s.motivoSalida||'cerrada');
+      cls = signo(s.plCents); clase='hecho';
+    }
+    const som = s.modo==='sombra' ? ' <em style="color:var(--apagado);font-style:normal">(sombra)</em>' : '';
+    return `<tr><td>${hora(s.creada)}</td><td class="${clase}">${qué}${som}</td>
+      <td style="text-align:right" class="${cls}">${s.estado==='cerrada'?usd(s.plCents):''}</td></tr>`;
+  }).join('');
+  document.getElementById('tabla').innerHTML = filas ||
+    '<tr><td colspan="3" style="color:var(--apagado)">Todavía no hay señales.</td></tr>';
 }
 
 async function accion(nombre, extra){
@@ -270,7 +482,10 @@ async function accion(nombre, extra){
 function alternarMotor(){
   if(!D) return;
   if(!D.estado.encendido && D.estado.modo==='real'){
-    if(!confirm('Vas a encender el bot en DINERO REAL.\n\n1 contrato = 0,01 BTC. Con BTC a ~$63.000 son ~$630 de exposición y el stop está en $'+ (D.ajustes.stopCents/100).toFixed(2)+'.\n\n¿Seguimos?')) return;
+    const exp = D.estado.producto ? '' : '';
+    if(!confirm('Vas a encender el bot en DINERO REAL.\n\n1 contrato = 0,01 BTC. El stop está en $'+
+      (D.ajustes.stopCents/100).toFixed(2)+' y el tope del día en $'+
+      (D.ajustes.maxPerdidaDiaCents/100).toFixed(2)+'.\n\n¿Seguimos?')) return;
   }
   accion(D.estado.encendido ? 'apagar' : 'encender');
 }
@@ -299,7 +514,9 @@ async function guardarAjustes(){
   const ajustes = {
     prefijoProducto: document.getElementById('a_prefijoProducto').value,
     contratos: n('a_contratos'), minutosAntes: n('a_minutosAntes'), tolMin: n('a_tolMin'),
-    momentumMin: n('a_momentumMin'), umbralSigma: n('a_umbralSigma'), minDerivaUsd: n('a_minDerivaUsd'),
+    momentumMin: n('a_momentumMin'), umbralSigma: n('a_umbralSigma'),
+    minDerivaUsd: n('a_minDerivaUsd'), minCoherencia: n('a_minCoherencia'),
+    multiploCoste: n('a_multiploCoste'),
     stopCents: Math.round(n('a_stopUsd')*100), objetivoCents: Math.round(n('a_objetivoUsd')*100),
     maxPerdidaDiaCents: Math.round(n('a_maxPerdidaUsd')*100),
     maxOperacionesDia: n('a_maxOperacionesDia'),
@@ -308,7 +525,8 @@ async function guardarAjustes(){
   const d = await pedir('?accion=ajustes', {method:'POST', body: JSON.stringify({accion:'ajustes', ajustes})});
   if(d.ok===false){ alert(d.error); return; }
   pinta(d);
-  document.getElementById('ajustesNota').textContent = 'Guardado a las '+hora(d.ahora)+'. Los valores fuera de rango se ajustan solos.';
+  document.getElementById('ajustesNota').textContent =
+    'Guardado a las ' + hora(d.ahora) + '. Los valores fuera de rango se ajustan solos.';
 }
 
 async function probar(){
@@ -327,8 +545,6 @@ async function reiniciarContador(){
   accion('reiniciar-contador');
 }
 
-// Tres cerrojos, igual que en los otros bots: descarga primero, escribir BORRAR,
-// y confirmación final diciendo cuántas señales se pierden.
 async function borrar(){
   if(!D) return;
   const cuantas = D.stats.total;
@@ -337,7 +553,7 @@ async function borrar(){
   await new Promise(r => setTimeout(r, 2500));
   const escrito = prompt('Esto no se puede deshacer. Escribe BORRAR en mayúsculas:');
   if(escrito !== 'BORRAR') return;
-  if(!confirm('Última vez: se pierden '+cuantas+' señales para siempre.\n\nRecuerda que para empezar de cero NO hace falta borrar: "Reiniciar contador" ya deja el histórico guardado.')) return;
+  if(!confirm('Última vez: se pierden '+cuantas+' señales para siempre.\n\nPara empezar de cero NO hace falta borrar: "Reiniciar contador" deja el histórico guardado.')) return;
   const d = await pedir('?accion=borrar-historial', {method:'POST', body: JSON.stringify({accion:'borrar-historial', confirmo:'BORRAR', cuantas})});
   if(d.ok===false){ alert(d.error); return; }
   pinta(d);
