@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>KRONOS-CB · futuros BTC en Coinbase</title>
+<title>KRONOS-CB ᚠᛏᛃ · futuros BTC en Coinbase</title>
 <style>
   :root{
     --fondo:#0e1116; --panel:#161b23; --linea:#252c37; --texto:#e6ebf2;
@@ -14,6 +14,9 @@
     font:15px/1.45 ui-sans-serif,-apple-system,"SF Pro Text",system-ui,sans-serif;
     padding:14px 14px 60px;-webkit-text-size-adjust:100%}
   h1{font-size:15px;letter-spacing:.14em;text-transform:uppercase;margin:0 0 2px;font-weight:600}
+  /* Las runas no se escalan ni se espacian como el resto del título: en el móvil
+     el interletrado del h1 las separa demasiado y se leen como tres símbolos sueltos. */
+  .runas{letter-spacing:.04em;font-size:16px;color:var(--largo);vertical-align:1px}
   .sub{color:var(--tenue);font-size:12px;margin-bottom:14px}
   .caja{background:var(--panel);border:1px solid var(--linea);border-radius:12px;padding:14px;margin-bottom:12px}
   .rotulo{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--tenue);margin-bottom:8px}
@@ -50,7 +53,7 @@
 </head>
 <body>
 
-<h1>Kronos-CB</h1>
+<h1>Kronos-CB <span class="runas">ᚠᛏᛃ</span></h1>
 <div class="sub" id="lema">Futuros nano de BTC en Coinbase · ventanas de 15 minutos</div>
 
 <div id="acceso" class="caja">
