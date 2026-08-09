@@ -89,6 +89,13 @@
   .relleno{height:100%;background:var(--apagado);border-radius:99px}
   .motivo:first-child .relleno{background:var(--corto)}
 
+  /* ---------- reglas ---------- */
+  .regla{display:flex;justify-content:space-between;gap:12px;padding:8px 0;
+    border-bottom:1px solid var(--linea);font-size:13.5px;align-items:baseline}
+  .regla:last-child{border-bottom:0}
+  .regla span{color:var(--tenue)}
+  .regla b{font:600 12.5px/1.4 var(--mono);color:var(--texto);text-align:right;font-variant-numeric:tabular-nums}
+
   /* ---------- filas ---------- */
   .fila{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--linea);font-size:14px}
   .fila:last-of-type{border-bottom:0}
@@ -188,8 +195,26 @@
   </div>
 
   <div class="caja">
+    <div class="rotulo">BTC y lo que decidió <span id="spotPie">—</span></div>
+    <svg class="lienzo" id="lienzoSpot" viewBox="0 0 320 120" preserveAspectRatio="none" aria-hidden="true"></svg>
+    <div id="spotVacio" class="vacio oculto">Sin precios guardados todavía.</div>
+    <div class="leyenda">
+      <span><i style="background:var(--largo)"></i>entró largo</span>
+      <span><i style="background:var(--corto)"></i>entró corto</span>
+      <span><i style="background:var(--apagado)"></i>vetó</span>
+    </div>
+  </div>
+
+  <div class="caja">
     <div class="rotulo">Por qué no operó <span id="motivosPie">—</span></div>
     <div id="motivos"></div>
+  </div>
+
+  <div class="caja">
+    <div class="rotulo">Reglas para abrir <span id="peajeNota">—</span></div>
+    <div id="reglasEntrada"></div>
+    <div class="rotulo" style="margin:18px 0 12px">Límites de riesgo</div>
+    <div id="reglasRiesgo"></div>
   </div>
 
   <div class="caja">
@@ -308,7 +333,8 @@ function pinta(d){
   document.getElementById('hoyGana').textContent = s.hoyReal.ganadas;
   document.getElementById('hoyVeto').textContent = s.fantasmas;
   document.getElementById('sombraNota').textContent =
-    'Sombra: ' + usd(s.sombra.plCents) + ' en ' + s.sombra.liquidadas + ' liquidadas. No es dinero.';
+    'Sombra: ' + usd(s.sombra.plCents) + ' en ' + s.sombra.liquidadas +
+    ' liquidadas, con el peaje ya descontado. No es dinero.';
 
   // acumulado
   document.getElementById('accPl').textContent = usd(s.acumuladoReal.plCents);
@@ -320,7 +346,9 @@ function pinta(d){
   dibujaCurva(s.curvaReal || [], s.curvaSombra || []);
 
   pintaCinta(s.cinta || []);
+  dibujaSpot(s.serieSpot || []);
   pintaMotivos(s.motivos || [], s.fantasmas);
+  pintaReglas(d.reglas);
 
   // estado
   document.getElementById('contrato').textContent = e.producto ? e.producto.id : '—';
@@ -404,6 +432,48 @@ function pintaCinta(cinta){
     const t = (x.motivo||x.estado) + ' · ' + hora(x.creada);
     return '<div class="'+cl+'" style="height:'+alto+'px" title="'+t.replace(/"/g,'')+'"></div>';
   }).join('');
+}
+
+function pintaReglas(reglas){
+  if(!reglas) return;
+  const linea = r => `<div class="regla"><span>${r.regla}</span><b>${r.valor}</b></div>`;
+  document.getElementById('reglasEntrada').innerHTML = reglas.entrada.map(linea).join('');
+  document.getElementById('reglasRiesgo').innerHTML = reglas.riesgo.map(linea).join('');
+  document.getElementById('peajeNota').textContent = reglas.peaje
+    ? 'peaje $' + reglas.peaje.porOperacion.toFixed(2) + ' · BTC debe moverse $' + reglas.peaje.movimientoParaEmpatar
+    : '';
+}
+
+/* El precio que vio el bot, con lo que hizo en cada ventana. Los puntos
+   grandes son entradas; los pequeños y grises, vetos. */
+function dibujaSpot(serie){
+  const svg = document.getElementById('lienzoSpot');
+  const vacio = document.getElementById('spotVacio');
+  if(serie.length < 2){ svg.innerHTML=''; svg.classList.add('oculto'); vacio.classList.remove('oculto'); return; }
+  svg.classList.remove('oculto'); vacio.classList.add('oculto');
+
+  const precios = serie.map(p=>p.spot);
+  const min = Math.min(...precios), max = Math.max(...precios);
+  const rango = (max-min) || 1;
+  const x = i => (i/(serie.length-1))*320;
+  const y = v => 110 - ((v-min)/rango)*100;
+
+  const d = serie.map((p,i)=>(i?'L':'M')+x(i).toFixed(1)+' '+y(p.spot).toFixed(1)).join(' ');
+  let html = `<path d="${d}" fill="none" stroke="var(--linea)" stroke-width="1.5"
+    stroke-linejoin="round" vector-effect="non-scaling-stroke"/>`;
+
+  serie.forEach((p,i)=>{
+    const cx = x(i).toFixed(1), cy = y(p.spot).toFixed(1);
+    if(p.estado==='fantasma'){
+      html += `<circle cx="${cx}" cy="${cy}" r="1.6" fill="var(--apagado)" opacity=".55"/>`;
+    } else {
+      const color = p.lado==='corto' ? 'var(--corto)' : 'var(--largo)';
+      html += `<circle cx="${cx}" cy="${cy}" r="3.4" fill="${color}"/>`;
+    }
+  });
+  svg.innerHTML = html;
+  document.getElementById('spotPie').textContent =
+    '$' + Math.round(min).toLocaleString() + '–' + Math.round(max).toLocaleString();
 }
 
 function pintaMotivos(motivos, total){
