@@ -87,6 +87,15 @@ function describeBalance(b) {
   return `${linea} — todo en cero. Si en la app ves saldo, es que Coinbase lo tiene en la cuenta principal y lo pasa a futuros al abrir la orden. El bot no usa este dato para decidir.`;
 }
 
+// El último precio que vio el bot, para poder poner el peaje en dólares.
+function ultimoSpot(senales) {
+  for (let i = senales.length - 1; i >= 0; i--) {
+    const v = Number(senales[i].spotAlEntrar);
+    if (v > 0) return v;
+  }
+  return null;
+}
+
 async function paquete() {
   const e = await N.leeEstado();
   const senales = await N.leeSenales();
@@ -111,6 +120,7 @@ async function paquete() {
       cronSecret: Boolean(N.CRON_SECRET),
     },
     stats: N.estadisticas(e, senales),
+    reglas: N.reglasVigentes(e, ultimoSpot(senales)),
     senales: senales.slice(-80).reverse(),
   };
 }
