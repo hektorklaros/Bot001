@@ -41,6 +41,52 @@ function limpiaAjustes(entrada, actuales) {
   return a;
 }
 
+// Coinbase devuelve el resumen de futuros con nombres que cambian según cómo
+// esté montada la cuenta, y algunos campos vienen como {value, currency} y
+// otros como número suelto. Antes se leía UN campo y, si venía en cero, el
+// panel decía "$0" como si no hubiera dinero. Ahora se leen todos los que
+// importan y, si no se reconoce ninguno, se enseñan las claves recibidas en
+// vez de inventar una cifra.
+function numeroDe(campo) {
+  if (campo === null || campo === undefined) return null;
+  if (typeof campo === 'number') return Number.isFinite(campo) ? campo : null;
+  if (typeof campo === 'string') { const n = Number(campo); return Number.isFinite(n) ? n : null; }
+  if (typeof campo === 'object') {
+    const n = Number(campo.value !== undefined ? campo.value : campo.amount);
+    return Number.isFinite(n) ? n : null;
+  }
+  return null;
+}
+
+function describeBalance(b) {
+  const resumen = (b && (b.balance_summary || b)) || {};
+  const campos = [
+    ['poder de compra', ['futures_buying_power', 'buying_power']],
+    ['margen disponible', ['available_margin', 'liquidation_buffer_amount']],
+    ['saldo de futuros', ['cfm_usd_balance', 'futures_balance']],
+    ['efectivo Coinbase', ['cbi_usd_balance']],
+    ['total', ['total_usd_balance', 'total_balance']],
+  ];
+  const partes = [];
+  let algunoConDinero = false;
+  for (const [etiqueta, claves] of campos) {
+    for (const clave of claves) {
+      const n = numeroDe(resumen[clave]);
+      if (n === null) continue;
+      partes.push(`${etiqueta} $${n.toFixed(2)}`);
+      if (n > 0) algunoConDinero = true;
+      break;
+    }
+  }
+  if (!partes.length) {
+    const claves = Object.keys(resumen).slice(0, 12).join(', ');
+    return `Coinbase respondió pero no reconozco ningún campo de saldo. Claves recibidas: ${claves || '(ninguna)'}`;
+  }
+  const linea = partes.join(' · ');
+  if (algunoConDinero) return linea;
+  return `${linea} — todo en cero. Si en la app ves saldo, es que Coinbase lo tiene en la cuenta principal y lo pasa a futuros al abrir la orden. El bot no usa este dato para decidir.`;
+}
+
 async function paquete() {
   const e = await N.leeEstado();
   const senales = await N.leeSenales();
@@ -114,9 +160,7 @@ module.exports = async (req, res) => {
           salida.contrato = `${p.id} a ${precio} (exposición por contrato: $${(precio * N.BTC_POR_CONTRATO).toFixed(2)})`;
         } catch (err) { salida.contrato = `falla: ${err.message}`; }
         try {
-          const b = await N.balanceFuturos();
-          const saldo = (b.cfm_usd_balance && b.cfm_usd_balance.value) || (b.total_usd_balance && b.total_usd_balance.value);
-          salida.balance = saldo !== undefined ? `$${saldo}` : JSON.stringify(b).slice(0, 200);
+          salida.balance = describeBalance(await N.balanceFuturos());
         } catch (err) { salida.balance = `falla: ${err.message}`; }
         res.status(200).json({ ok: true, prueba: salida });
         return;
