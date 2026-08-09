@@ -16,7 +16,7 @@ function limpiaAjustes(entrada, actuales) {
   const a = Object.assign({}, actuales);
   const e = entrada || {};
   const enteros = {
-    contratos: [1, 5],
+    contratos: [1, 1], // v1.2: tope duro de 1 contrato
     minutosAntes: [1, 14],
     momentumMin: [3, 60],
     stopCents: [50, 10000],
@@ -30,6 +30,8 @@ function limpiaAjustes(entrada, actuales) {
   }
   if (e.tolMin !== undefined) a.tolMin = N.limita(N.num(e.tolMin, a.tolMin), 0.25, 5);
   if (e.umbralSigma !== undefined) a.umbralSigma = N.limita(N.num(e.umbralSigma, a.umbralSigma), 0, 6);
+  if (e.minCoherencia !== undefined) a.minCoherencia = N.limita(N.num(e.minCoherencia, a.minCoherencia), 0, 1);
+  if (e.multiploCoste !== undefined) a.multiploCoste = N.limita(N.num(e.multiploCoste, a.multiploCoste), 0, 20);
   if (e.usarObjetivo !== undefined) a.usarObjetivo = Boolean(e.usarObjetivo);
   if (e.salirAlCierre !== undefined) a.salirAlCierre = Boolean(e.salirAlCierre);
   if (e.prefijoProducto !== undefined) {
@@ -63,7 +65,7 @@ async function paquete() {
       cronSecret: Boolean(N.CRON_SECRET),
     },
     stats: N.estadisticas(e, senales),
-    senales: senales.slice(-60).reverse(),
+    senales: senales.slice(-80).reverse(),
   };
 }
 
