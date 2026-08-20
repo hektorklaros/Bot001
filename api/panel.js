@@ -96,6 +96,17 @@ function ultimoSpot(senales) {
   return null;
 }
 
+// ── ARREGLO 20 AGO ────────────────────────────────────────────────────────
+// El nucleo v1.6 NO exporta `reglasVigentes`: el panel la llamaba y reventaba
+// con "N.reglasVigentes is not a function" ANTES de validar la clave, así que
+// no se podía ni entrar. Aquí se llama solo si existe. Si no existe, la
+// tarjeta de reglas sale vacía y el resto del panel funciona igual.
+function reglasSeguras(e, spot) {
+  if (typeof N.reglasVigentes !== 'function') return null;
+  try { return N.reglasVigentes(e, spot); }
+  catch (err) { return { error: err.message }; }
+}
+
 async function paquete() {
   const e = await N.leeEstado();
   const senales = await N.leeSenales();
@@ -120,7 +131,7 @@ async function paquete() {
       cronSecret: Boolean(N.CRON_SECRET),
     },
     stats: N.estadisticas(e, senales),
-    reglas: N.reglasVigentes(e, ultimoSpot(senales)),
+    reglas: reglasSeguras(e, ultimoSpot(senales)),
     senales: senales.slice(-80).reverse(),
   };
 }
