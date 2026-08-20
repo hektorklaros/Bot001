@@ -1,5 +1,6 @@
 // API del panel. Todo pasa por clave.
 const N = require('../lib/nucleo.js');
+const X = require('../lib/panel-extra.js');
 
 function claveDe(req) {
   const h = (req.headers && (req.headers['x-clave'] || req.headers['X-Clave'])) || '';
@@ -97,14 +98,28 @@ function ultimoSpot(senales) {
 }
 
 // ── ARREGLO 20 AGO ────────────────────────────────────────────────────────
-// El nucleo v1.6 NO exporta `reglasVigentes`: el panel la llamaba y reventaba
-// con "N.reglasVigentes is not a function" ANTES de validar la clave, así que
-// no se podía ni entrar. Aquí se llama solo si existe. Si no existe, la
-// tarjeta de reglas sale vacía y el resto del panel funciona igual.
+// 1) El nucleo v1.6 no exporta `reglasVigentes`: el panel la llamaba y
+//    reventaba con "N.reglasVigentes is not a function" ANTES de validar la
+//    clave, así que no se podía ni entrar.
+// 2) `N.estadisticas()` no construye las cinco series que dibuja el front
+//    (curvaReal, curvaSombra, cinta, serieSpot, motivos), y por eso tres
+//    tarjetas salían vacías aunque el contador de vetadas subiera.
+// Las dos cosas viven ahora en lib/panel-extra.js, aparte del nucleo para
+// que un fallo aquí no pueda tumbar el motor que ordena. Van envueltas en
+// try: si algo falla, el panel pierde una tarjeta pero sigue abriendo.
 function reglasSeguras(e, spot) {
-  if (typeof N.reglasVigentes !== 'function') return null;
-  try { return N.reglasVigentes(e, spot); }
-  catch (err) { return { error: err.message }; }
+  try {
+    if (typeof N.reglasVigentes === 'function') return N.reglasVigentes(e, spot);
+    return X.reglasVigentes(N, e, spot);
+  } catch (err) {
+    return null;
+  }
+}
+
+function statsCompletas(e, senales) {
+  const base = N.estadisticas(e, senales);
+  try { return Object.assign(base, X.extras(e, senales)); }
+  catch (err) { return base; }
 }
 
 async function paquete() {
@@ -130,7 +145,7 @@ async function paquete() {
       credenciales: Boolean(N.CB_KEY_NAME && N.CB_KEY_SECRET_RAW),
       cronSecret: Boolean(N.CRON_SECRET),
     },
-    stats: N.estadisticas(e, senales),
+    stats: statsCompletas(e, senales),
     reglas: reglasSeguras(e, ultimoSpot(senales)),
     senales: senales.slice(-80).reverse(),
   };
